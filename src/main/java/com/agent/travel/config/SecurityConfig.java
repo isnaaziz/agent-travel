@@ -24,6 +24,16 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.web.filter.OncePerRequestFilter;
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -37,44 +47,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for stateless API
-            .csrf(AbstractHttpConfigurer::disable)
-            // Enable CORS
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                .ignoringRequestMatchers("/api/auth/**", "/api/payments/callback", "/h2-console/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+            )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Frame options for H2 Console
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-            // Security Rules
             .authorizeHttpRequests(auth -> auth
-                // Public UI & Static Assets
                 .requestMatchers(HttpMethod.GET, "/", "/index.html", "/style.css", "/app.js", "/favicon.ico").permitAll()
                 .requestMatchers(HttpMethod.GET, "/static/**", "/templates/**").permitAll()
-                // Authentication API
                 .requestMatchers("/api/auth/**").permitAll()
-                // Payment Callback (Public)
                 .requestMatchers(HttpMethod.POST, "/api/payments/callback").permitAll()
-                // Destinations (Browsing is public, management is ADMIN only)
                 .requestMatchers(HttpMethod.GET, "/api/destinations/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/destinations/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/destinations/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/destinations/**").hasRole("ADMIN")
-                // Bookings (Read is open to all authenticated users, PATCH status is ADMIN/OPERATOR only)
                 .requestMatchers(HttpMethod.GET, "/api/bookings/**").hasAnyRole("ADMIN", "OPERATOR", "USER")
                 .requestMatchers(HttpMethod.POST, "/api/bookings/**").hasRole("USER")
                 .requestMatchers(HttpMethod.PATCH, "/api/bookings/*/status").hasAnyRole("ADMIN", "OPERATOR")
                 .requestMatchers(HttpMethod.PUT, "/api/bookings/*/cancel").hasAnyRole("USER", "ADMIN", "OPERATOR")
-                // Swagger Documentation
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                // H2 Database Console
                 .requestMatchers("/h2-console/**").permitAll()
-                // Everything else requires authentication
                 .anyRequest().authenticated()
             )
-            // Stateless Sessions
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // Provider
             .authenticationProvider(authenticationProvider())
-            // JWT Filter Interceptor
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class);
 
         return http.build();
     }
@@ -105,11 +105,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control", "X-XSRF-TOKEN"));
+        configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+}
+
+class CsrfCookieFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        if (csrfToken != null) {
+            csrfToken.getToken();
+        }
+        filterChain.doFilter(request, response);
     }
 }

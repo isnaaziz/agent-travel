@@ -36,9 +36,14 @@ Dasbor khusus pelanggan yang menyajikan data perjalanan secara visual dengan fil
 *   **Interactive Mock Payment Gateway**: Apabila kunci API Midtrans tidak dikonfigurasi, sistem secara otomatis beralih ke Mode Simulasi Interaktif. Dasbor menyajikan simulasi pembayaran QRIS, Virtual Account, dan Kartu Kredit secara visual dengan loading spinner yang menembak callback webhook simulasi secara real-time.
 
 ### 5. Dokumen Tiket Elektronik (Printable E-Ticket)
-*   Setiap pemesanan yang telah lunas (berstatus CONFIRMED) akan menerbitkan E-Ticket.
 *   E-Ticket menampilkan barcode transaksi, kode pemesanan unik (`AT-20260530-[ID]`), QR code boarding, rincian daftar penumpang, serta syarat dan ketentuan check-in.
 *   Tombol cetak e-ticket terintegrasi dengan media stylesheet cetak khusus browser (`@media print`), memastikan proses pencetakan hanya mengisolasi lembaran tiket berlatar putih formal tanpa mencetak elemen dasbor web.
+
+### 6. Sistem Keamanan Tingkat Tinggi (Secure Cookies & CSRF Protection)
+Aplikasi menerapkan standar keamanan modern untuk melindungi data pengguna dan transaksi:
+*   **Secure HttpOnly Cookie**: Token JWT disimpan secara aman di dalam cookie ber-atribut HttpOnly, Secure, dan SameSite=Lax. Hal ini memastikan token tidak dapat dibaca atau diekstraksi oleh skrip sisi klien, sehingga memberikan perlindungan mutlak terhadap serangan Cross-Site Scripting (XSS).
+*   **Double Submit Cookie CSRF Protection**: Untuk mencegah serangan Cross-Site Request Forgery (CSRF), Spring Security dikonfigurasi untuk menerbitkan cookie XSRF-TOKEN. Sisi frontend Javascript Vanilla mendeteksi token ini secara dinamis dan melampirkannya kembali dalam header request HTTP (X-XSRF-TOKEN) untuk setiap operasi mutasi data non-GET (POST, PUT, DELETE, PATCH).
+*   **Endpoint Sign Out Aman**: Menambahkan mekanisme penghapusan cookie secara eksplisit dari sisi server saat pengguna menekan tombol keluar, memastikan sesi benar-benar berakhir dengan aman.
 
 ---
 
@@ -47,7 +52,7 @@ Dasbor khusus pelanggan yang menyajikan data perjalanan secara visual dengan fil
 ### Backend
 *   **Bahasa Pemrograman & Runtime**: Java 21
 *   **Framework Utama**: Spring Boot 4.0.6
-*   **Keamanan**: Spring Security 6+ & JSON Web Token (JWT)
+*   **Keamanan**: Spring Security 6+ & JSON Web Token (JWT) berbasis HttpOnly Cookie dengan Proteksi CSRF Double Submit
 *   **Database ORM**: Spring Data JPA & Hibernate
 *   **Database Engine**: H2 In-Memory Database (skenario pengembangan cepat)
 *   **Dokumentasi API**: Springdoc OpenAPI / Swagger UI
@@ -55,7 +60,7 @@ Dasbor khusus pelanggan yang menyajikan data perjalanan secara visual dengan fil
 ### Frontend
 *   **Markup & Struktur**: HTML5 (Struktur semantik)
 *   **Gaya & Desain**: Vanilla CSS3 (Mengadopsi variabel kustom, glassmorphism, visual bertema gelap premium, dan tipografi Outfit dari Google Fonts)
-*   **Logika Klien**: Javascript ES6 (Single Page Application, pengelolaan state stateless berbasis localStorage JWT)
+*   **Logika Klien**: Javascript ES6 (Single Page Application, komunikasi berbasis Session State & Double Submit Cookie CSRF)
 
 ---
 

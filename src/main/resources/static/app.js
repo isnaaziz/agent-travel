@@ -14,8 +14,8 @@ let currentSelectedDest = null;
 let activeHistoryFilter = 'active';
 
 // Authentication State
-let token = localStorage.getItem('jwt_token') || null;
 let user = JSON.parse(localStorage.getItem('user_details')) || null;
+let token = user ? 'session-active' : null;
 
 // DOM Elements
 const destinationsContainer = document.getElementById('destinations-container');
@@ -44,13 +44,21 @@ const destinationForm = document.getElementById('destination-form');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
 // Auth Header Helper
 function getAuthHeaders() {
     const headers = {
         'Content-Type': 'application/json'
     };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    const csrfToken = getCookie('XSRF-TOKEN');
+    if (csrfToken) {
+        headers['X-XSRF-TOKEN'] = csrfToken;
     }
     return headers;
 }
@@ -953,14 +961,13 @@ async function handleGoogleLogin() {
 }
 
 function handleSignInSuccess(authData) {
-    token = authData.token;
+    token = 'session-active';
     user = {
         name: authData.name,
         email: authData.email,
         role: authData.role
     };
     
-    localStorage.setItem('jwt_token', token);
     localStorage.setItem('user_details', JSON.stringify(user));
     
     authModal.classList.add('hidden');
@@ -975,15 +982,30 @@ function handleSignInSuccess(authData) {
     }
 }
 
-function handleSignOut() {
+async function handleSignOut() {
+    try {
+        await fetch(`${AUTH_API}/signout`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+    } catch (err) {
+        console.error('Failed to log out from server:', err);
+    }
+
     token = null;
     user = null;
     
-    localStorage.removeItem('jwt_token');
     localStorage.removeItem('user_details');
     
     showToast('Successfully signed out.', 'success');
     syncAuthUI();
+    
+    if (activeTab === 'bookings') {
+        const explorerBtn = document.querySelector('.nav-btn[data-tab="explorer"]');
+        if (explorerBtn) {
+            explorerBtn.click();
+        }
+    }
 }
 
 async function initiatePayment(bookingId) {
