@@ -3,6 +3,7 @@ package com.agent.travel.service.payment;
 import com.agent.travel.model.Booking;
 import com.agent.travel.repository.booking.BookingRepository;
 import com.agent.travel.service.booking.BookingService;
+import com.agent.travel.enumeration.BookingStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -168,16 +169,16 @@ public class PaymentService {
         String transactionStatus = (String) callbackData.get("transaction_status");
         String fraudStatus = (String) callbackData.get("fraud_status");
 
-        Booking.BookingStatus newStatus = null;
+        BookingStatus newStatus = null;
 
         if ("settlement".equals(transactionStatus)) {
-            newStatus = Booking.BookingStatus.CONFIRMED;
+            newStatus = BookingStatus.CONFIRMED;
         } else if ("capture".equals(transactionStatus)) {
             if (!"challenge".equals(fraudStatus)) {
-                newStatus = Booking.BookingStatus.CONFIRMED;
+                newStatus = BookingStatus.CONFIRMED;
             }
         } else if ("deny".equals(transactionStatus) || "cancel".equals(transactionStatus) || "expire".equals(transactionStatus)) {
-            newStatus = Booking.BookingStatus.CANCELLED;
+            newStatus = BookingStatus.CANCELLED;
         }
 
         if (newStatus != null) {

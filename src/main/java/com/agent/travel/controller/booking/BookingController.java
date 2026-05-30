@@ -6,6 +6,7 @@ import com.agent.travel.model.Booking;
 import com.agent.travel.model.User;
 import com.agent.travel.service.booking.BookingService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.agent.travel.enumeration.BookingStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -50,7 +51,7 @@ public class BookingController {
     @Operation(summary = "Update booking status (CONFIRMED, CANCELLED, etc.)")
     public ResponseEntity<ApiResponse<Booking>> updateBookingStatus(
             @PathVariable Long id,
-            @RequestParam Booking.BookingStatus status) {
+            @RequestParam BookingStatus status) {
         Booking updatedBooking = bookingService.updateBookingStatus(id, status);
         return ResponseEntity.ok(ApiResponse.success("Booking status updated successfully", updatedBooking));
     }

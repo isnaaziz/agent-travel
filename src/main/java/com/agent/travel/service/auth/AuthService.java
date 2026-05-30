@@ -3,6 +3,8 @@ package com.agent.travel.service.auth;
 import com.agent.travel.dto.AuthRequests.*;
 import com.agent.travel.model.User;
 import com.agent.travel.repository.auth.UserRepository;
+import com.agent.travel.enumeration.AuthProvider;
+import com.agent.travel.enumeration.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,8 +38,8 @@ public class AuthService {
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .provider(User.AuthProvider.LOCAL)
-                .role(User.Role.USER)
+                .provider(AuthProvider.LOCAL)
+                .role(Role.USER)
                 .build();
 
         userRepository.save(user);
@@ -78,15 +80,15 @@ public class AuthService {
         String email;
         String name;
 
-        User.Role mockRole = User.Role.USER;
+        Role mockRole = Role.USER;
         if (request.getIdToken().startsWith("mock_google_")) {
             log.info("Processing simulated/mock Google login...");
             String[] parts = request.getIdToken().split("_");
             String roleStr = parts.length > 2 ? parts[2] : "USER";
             try {
-                mockRole = User.Role.valueOf(roleStr.toUpperCase());
+                mockRole = Role.valueOf(roleStr.toUpperCase());
             } catch (Exception e) {
-                mockRole = User.Role.USER;
+                mockRole = Role.USER;
             }
             name = parts.length > 3 ? parts[3].replace("-", " ") : "Google Traveler";
             email = parts.length > 4 ? parts[4] : "traveler@gmail.com";
@@ -125,11 +127,11 @@ public class AuthService {
             log.info("User already exists. Logging in user: {}", email);
         } else {
             log.info("Registering new Google user: {}", email);
-            User.Role finalRole = request.getIdToken().startsWith("mock_google_") ? mockRole : User.Role.USER;
+            Role finalRole = request.getIdToken().startsWith("mock_google_") ? mockRole : Role.USER;
             user = User.builder()
                     .name(name)
                     .email(email)
-                    .provider(User.AuthProvider.GOOGLE)
+                    .provider(AuthProvider.GOOGLE)
                     .role(finalRole)
                     .build();
             userRepository.save(user);

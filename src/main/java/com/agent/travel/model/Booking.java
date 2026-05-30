@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import com.agent.travel.enumeration.BookingStatus;
 
 @Entity
 @Table(name = "bookings")
@@ -62,9 +63,4 @@ public class Booking {
     @Column(name = "payment_token")
     private String paymentToken;
 
-    public enum BookingStatus {
-        PENDING,
-        CONFIRMED,
-        CANCELLED
-    }
 }

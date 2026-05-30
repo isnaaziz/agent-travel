@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.agent.travel.enumeration.AuthProvider;
+import com.agent.travel.enumeration.Role;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,16 +50,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
-    public enum AuthProvider {
-        LOCAL,
-        GOOGLE
-    }
 
-    public enum Role {
-        USER,
-        ADMIN,
-        OPERATOR
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

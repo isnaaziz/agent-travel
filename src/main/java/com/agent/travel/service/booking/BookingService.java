@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.agent.travel.enumeration.BookingStatus;
+import com.agent.travel.enumeration.Role;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +25,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<Booking> getAllBookings(User user) {
-        if (user.getRole() == User.Role.ADMIN || user.getRole() == User.Role.OPERATOR) {
+        if (user.getRole() == Role.ADMIN || user.getRole() == Role.OPERATOR) {
             return bookingRepository.findAll();
         } else {
             return bookingRepository.findByCustomerEmailIgnoreCase(user.getEmail());
@@ -46,7 +48,7 @@ public class BookingService {
                 .destination(destination)
                 .bookingDate(LocalDateTime.now())
                 .travelDate(request.getTravelDate())
-                .status(Booking.BookingStatus.PENDING)
+                .status(BookingStatus.PENDING)
                 .duration(request.getDuration())
                 .totalPrice(destination.getPrice() * request.getDuration())
                 .build();
@@ -55,7 +57,7 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking updateBookingStatus(Long id, Booking.BookingStatus status) {
+    public Booking updateBookingStatus(Long id, BookingStatus status) {
         Booking booking = getBookingById(id);
         booking.setStatus(status);
         return bookingRepository.save(booking);
@@ -64,7 +66,7 @@ public class BookingService {
     @Transactional
     public void cancelBooking(Long id) {
         Booking booking = getBookingById(id);
-        booking.setStatus(Booking.BookingStatus.CANCELLED);
+        booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
     }
 }
