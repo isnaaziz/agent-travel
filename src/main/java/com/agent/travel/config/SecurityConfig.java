@@ -50,6 +50,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/static/**", "/templates/**").permitAll()
                 // Authentication API
                 .requestMatchers("/api/auth/**").permitAll()
+                // Payment Callback (Public)
+                .requestMatchers(HttpMethod.POST, "/api/payments/callback").permitAll()
                 // Destinations (Browsing is public, management is ADMIN only)
                 .requestMatchers(HttpMethod.GET, "/api/destinations/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/destinations/**").hasRole("ADMIN")

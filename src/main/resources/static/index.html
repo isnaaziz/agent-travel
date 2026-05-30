@@ -29,13 +29,21 @@
                 </div>
             </div>
             <nav class="nav-menu">
+                <button class="nav-btn" data-tab="flights">
+                    <i class="fa-solid fa-plane"></i>
+                    <span>Flights</span>
+                </button>
+                <button class="nav-btn" data-tab="hotels">
+                    <i class="fa-solid fa-hotel"></i>
+                    <span>Hotels</span>
+                </button>
                 <button class="nav-btn active" data-tab="explorer">
                     <i class="fa-solid fa-compass"></i>
-                    <span>Explore Destinations</span>
+                    <span>Holiday Packages</span>
                 </button>
                 <button class="nav-btn" data-tab="bookings">
                     <i class="fa-solid fa-ticket"></i>
-                    <span>Manage Bookings</span>
+                    <span>Booking History</span>
                     <span class="badge" id="bookings-count">0</span>
                 </button>
                 <button class="nav-btn" id="btn-swagger" onclick="window.open('/swagger-ui.html', '_blank')">
@@ -105,9 +113,10 @@
                 </div>
             </section>
 
-            <!-- Tab 2: Bookings Management -->
+            <!-- Tab 2: Bookings Management / Travel History -->
             <section id="tab-bookings" class="tab-pane">
-                <div class="booking-stats">
+                <!-- Staff Statistics Widgets (Visible to Admin/Operator only) -->
+                <div class="booking-stats" id="staff-booking-stats">
                     <div class="stat-card">
                         <i class="fa-solid fa-wallet stat-icon icon-purple"></i>
                         <div class="stat-info">
@@ -131,14 +140,27 @@
                     </div>
                 </div>
 
+                <!-- User History Tabs Filter (Visible to regular USER only) -->
+                <div class="history-tabs-container hidden" id="user-history-filters" style="margin-bottom: 2rem; display: flex; gap: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                    <button class="history-tab active" data-history-filter="active">
+                        <i class="fa-solid fa-plane-departure"></i> Active Trips
+                    </button>
+                    <button class="history-tab" data-history-filter="past">
+                        <i class="fa-solid fa-circle-check"></i> Past & Completed
+                    </button>
+                    <button class="history-tab" data-history-filter="cancelled">
+                        <i class="fa-solid fa-ban"></i> Cancelled
+                    </button>
+                </div>
+
                 <!-- Bookings Loading Spinner -->
                 <div id="bookings-loading" class="spinner-container">
                     <div class="spinner"></div>
                     <p>Retrieving client bookings...</p>
                 </div>
 
-                <!-- Bookings Table Container -->
-                <div class="table-container">
+                <!-- Staff Management Table View (Visible to Admin/Operator only) -->
+                <div class="table-container" id="staff-bookings-view">
                     <table class="bookings-table">
                         <thead>
                             <tr>
@@ -155,10 +177,108 @@
                             <!-- Booking rows will be dynamically inserted here -->
                         </tbody>
                     </table>
-                    <div id="no-bookings-view" class="empty-view hidden">
-                        <i class="fa-solid fa-folder-open"></i>
-                        <p>No bookings found. Head to the Destination Explorer to create one!</p>
+                </div>
+
+                <!-- Customer Traveloka Booking Center Card List (Visible to regular USER only) -->
+                <div class="history-cards-container hidden" id="user-bookings-view" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Cards will be dynamically inserted here by JS -->
+                </div>
+
+                <!-- Empty View -->
+                <div id="no-bookings-view" class="empty-view hidden">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <p>No bookings found. Head to the Destination Explorer to create one!</p>
+                </div>
+            </section>
+
+            <!-- Tab 3: Flights -->
+            <section id="tab-flights" class="tab-pane">
+                <div class="traveloka-search-card" style="background: rgba(30, 41, 59, 0.45); border: 1px solid var(--border-color); border-radius: 20px; padding: 2rem; backdrop-filter: blur(15px);">
+                    <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.35rem; font-weight: 600; color:#3b82f6; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-plane"></i> Book Cheap Flight Tickets</h3>
+                    <div class="search-form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+                        <div class="form-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;"><i class="fa-solid fa-plane-departure"></i> Origin</label>
+                            <select id="flight-origin" class="mock-input" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; padding: 0.75rem 1rem; border-radius: 10px; font-family: inherit; font-size:0.9rem; outline:none;">
+                                <option value="CGK">Jakarta (CGK)</option>
+                                <option value="SUB">Surabaya (SUB)</option>
+                                <option value="DPS">Bali (DPS)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;"><i class="fa-solid fa-plane-arrival"></i> Destination</label>
+                            <select id="flight-destination" class="mock-input" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; padding: 0.75rem 1rem; border-radius: 10px; font-family: inherit; font-size:0.9rem; outline:none;">
+                                <option value="HND" selected>Tokyo (HND)</option>
+                                <option value="SIN">Singapore (SIN)</option>
+                                <option value="DPS">Bali (DPS)</option>
+                                <option value="ICN">Seoul (ICN)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;"><i class="fa-solid fa-calendar"></i> Departure Date</label>
+                            <input type="date" id="flight-date" class="mock-input" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; padding: 0.75rem 1rem; border-radius: 10px; font-family: inherit; font-size:0.9rem; outline:none; height:43px; box-sizing:border-box;">
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;"><i class="fa-solid fa-chair"></i> Seat Class</label>
+                            <select id="flight-class" class="mock-input" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; padding: 0.75rem 1rem; border-radius: 10px; font-family: inherit; font-size:0.9rem; outline:none;">
+                                <option value="economy">Economy</option>
+                                <option value="business">Business</option>
+                                <option value="first">First Class</option>
+                            </select>
+                        </div>
                     </div>
+                    <button class="btn btn-primary btn-full-width" id="btn-search-flights" style="margin-top: 1.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search Flights
+                    </button>
+                </div>
+
+                <!-- Flights Loading -->
+                <div id="flights-loading" class="spinner-container hidden" style="margin-top: 2rem;">
+                    <div class="spinner"></div>
+                    <p>Finding the best flights for you...</p>
+                </div>
+
+                <!-- Flight Results Container -->
+                <div id="flight-results-container" class="flight-results-list hidden" style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Airlines card items injected by JS -->
+                </div>
+            </section>
+
+            <!-- Tab 4: Hotels -->
+            <section id="tab-hotels" class="tab-pane">
+                <div class="traveloka-search-card" style="background: rgba(30, 41, 59, 0.45); border: 1px solid var(--border-color); border-radius: 20px; padding: 2rem; backdrop-filter: blur(15px);">
+                    <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.35rem; font-weight: 600; color:#3b82f6; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-hotel"></i> Find and Book Premium Hotels</h3>
+                    <div class="search-form-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.25rem;">
+                        <div class="form-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;"><i class="fa-solid fa-location-dot"></i> Destination / Hotel Name</label>
+                            <input type="text" id="hotel-query" class="mock-input" placeholder="e.g. Kyoto Zen Garden House, Resorts World..." value="Kyoto, Japan" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; padding: 0.75rem 1rem; border-radius: 10px; font-family: inherit; font-size:0.9rem; outline:none; height:43px; box-sizing:border-box;">
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;"><i class="fa-solid fa-calendar"></i> Check-in Date</label>
+                            <input type="date" id="hotel-date" class="mock-input" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; padding: 0.75rem 1rem; border-radius: 10px; font-family: inherit; font-size:0.9rem; outline:none; height:43px; box-sizing:border-box;">
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:column; gap:0.5rem;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;"><i class="fa-solid fa-user-group"></i> Guests & Rooms</label>
+                            <select id="hotel-guests" class="mock-input" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); color: white; padding: 0.75rem 1rem; border-radius: 10px; font-family: inherit; font-size:0.9rem; outline:none;">
+                                <option>1 Guest, 1 Room</option>
+                                <option selected>2 Guests, 1 Room</option>
+                                <option>4 Guests, 2 Rooms</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full-width" id="btn-search-hotels" style="margin-top: 1.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Search Hotels
+                    </button>
+                </div>
+
+                <!-- Hotels Loading -->
+                <div id="hotels-loading" class="spinner-container hidden" style="margin-top: 2rem;">
+                    <div class="spinner"></div>
+                    <p>Searching gorgeous hotels...</p>
+                </div>
+
+                <!-- Hotels Grid Container -->
+                <div id="hotel-results-container" class="destinations-grid hidden" style="margin-top: 2rem;">
+                    <!-- Hotels items injected by JS -->
                 </div>
             </section>
         </main>
@@ -315,6 +435,23 @@
             
             <div class="auth-modal-footer">
                 <button class="btn-text" id="btn-close-auth">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Traveloka-Style Printable E-Ticket / Voucher Modal -->
+    <div class="modal-backdrop hidden" id="eticket-modal">
+        <div class="modal eticket-modal-container" style="max-width: 760px; width: 90%;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-ticket"></i> Traveloka E-Ticket & Voucher</h3>
+                <button class="modal-close" id="close-eticket-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="eticket-content" style="background: white; padding: 2.5rem; max-height: 70vh; overflow-y: auto;">
+                <!-- E-Ticket content goes here -->
+            </div>
+            <div class="modal-footer eticket-footer" style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                <button class="btn btn-secondary" id="btn-close-eticket">Close</button>
+                <button class="btn btn-primary" id="btn-print-eticket"><i class="fa-solid fa-print"></i> Print E-Ticket</button>
             </div>
         </div>
     </div>

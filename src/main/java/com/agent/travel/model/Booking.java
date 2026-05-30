@@ -59,6 +59,9 @@ public class Booking {
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
+    @Column(name = "payment_token")
+    private String paymentToken;
+
     public enum BookingStatus {
         PENDING,
         CONFIRMED,
