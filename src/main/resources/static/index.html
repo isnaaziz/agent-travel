@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Travel - Premium Booking Portal</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Floating Decorative Gradients -->
+        <div class="blob blob-purple"></div>
+        <div class="blob blob-blue"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-plane-departure brand-icon"></i>
+                <div class="brand-text">
+                    <h1>AgentTravel</h1>
+                    <span>Premium Portal</span>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="explorer">
+                    <i class="fa-solid fa-compass"></i>
+                    <span>Explore Destinations</span>
+                </button>
+                <button class="nav-btn" data-tab="bookings">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>Manage Bookings</span>
+                    <span class="badge" id="bookings-count">0</span>
+                </button>
+                <button class="nav-btn" id="btn-swagger" onclick="window.open('/swagger-ui.html', '_blank')">
+                    <i class="fa-solid fa-book"></i>
+                    <span>API Docs (Swagger)</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Spring Boot 4.0 & Java 21</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-left">
+                    <h2 id="page-title">Explore the World</h2>
+                    <p id="page-subtitle">Select a destination and finalize customer bookings easily.</p>
+                </div>
+                <div class="header-right" style="display: flex; gap: 1rem; align-items: center;">
+                    <div class="user-profile-widget hidden" id="user-profile-header">
+                        <div class="user-avatar" id="user-avatar-initials">U</div>
+                        <div class="user-info">
+                            <span id="user-profile-name">User Name</span>
+                            <span id="user-profile-email">user@email.com</span>
+                        </div>
+                        <button class="btn-signout" id="btn-signout" title="Sign Out">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-secondary" id="btn-login-trigger">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                    </button>
+                    <div class="db-status">
+                        <span class="status-indicator online"></span>
+                        <span>Connected</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Notification Toast -->
+            <div id="toast" class="toast hidden"></div>
+
+            <!-- Tab 1: Destination Explorer -->
+            <section id="tab-explorer" class="tab-pane active">
+                <!-- Search & Filters -->
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-input" placeholder="Search by destination name or country...">
+                    </div>
+                    <button class="btn btn-primary" id="btn-add-destination">
+                        <i class="fa-solid fa-plus"></i> Add Destination
+                    </button>
+                </div>
+
+                <!-- Destinations Loading Spinner -->
+                <div id="explorer-loading" class="spinner-container">
+                    <div class="spinner"></div>
+                    <p>Fetching beautiful destinations...</p>
+                </div>
+
+                <!-- Destinations Grid -->
+                <div class="destinations-grid" id="destinations-container">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Tab 2: Bookings Management -->
+            <section id="tab-bookings" class="tab-pane">
+                <div class="booking-stats">
+                    <div class="stat-card">
+                        <i class="fa-solid fa-wallet stat-icon icon-purple"></i>
+                        <div class="stat-info">
+                            <h3>Total Revenue</h3>
+                            <p id="stat-revenue">IDR 0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fa-solid fa-circle-check stat-icon icon-green"></i>
+                        <div class="stat-info">
+                            <h3>Confirmed Bookings</h3>
+                            <p id="stat-confirmed">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fa-solid fa-clock stat-icon icon-yellow"></i>
+                        <div class="stat-info">
+                            <h3>Pending Bookings</h3>
+                            <p id="stat-pending">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings Loading Spinner -->
+                <div id="bookings-loading" class="spinner-container">
+                    <div class="spinner"></div>
+                    <p>Retrieving client bookings...</p>
+                </div>
+
+                <!-- Bookings Table Container -->
+                <div class="table-container">
+                    <table class="bookings-table">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Customer Details</th>
+                                <th>Destination</th>
+                                <th>Travel Date</th>
+                                <th>Total Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookings-table-body">
+                            <!-- Booking rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                    <div id="no-bookings-view" class="empty-view hidden">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <p>No bookings found. Head to the Destination Explorer to create one!</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal-backdrop hidden" id="booking-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Book Travel Package</h3>
+                <button class="modal-close" id="close-booking-modal">&times;</button>
+            </div>
+            <form id="booking-form" class="modal-body">
+                <input type="hidden" id="booking-destination-id">
+                
+                <div class="selected-destination-summary">
+                    <img id="modal-dest-image" src="" alt="Destination">
+                    <div class="summary-details">
+                        <h4 id="modal-dest-name">Destination Name</h4>
+                        <p id="modal-dest-country">Country</p>
+                        <span class="price-tag" id="modal-dest-price">IDR 0</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-name"><i class="fa-solid fa-user"></i> Customer Name</label>
+                    <input type="text" id="customer-name" placeholder="Enter traveler's full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-email"><i class="fa-solid fa-envelope"></i> Customer Email</label>
+                    <input type="email" id="customer-email" placeholder="email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="travel-date"><i class="fa-solid fa-calendar-days"></i> Travel Date</label>
+                    <input type="date" id="travel-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="booking-duration"><i class="fa-solid fa-clock"></i> Duration (Days)</label>
+                    <input type="number" id="booking-duration" min="1" value="1" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-booking-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Confirm Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Destination Modal -->
+    <div class="modal-backdrop hidden" id="destination-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add New Destination</h3>
+                <button class="modal-close" id="close-dest-modal">&times;</button>
+            </div>
+            <form id="destination-form" class="modal-body">
+                <div class="form-group">
+                    <label for="dest-name"><i class="fa-solid fa-location-dot"></i> Destination Name</label>
+                    <input type="text" id="dest-name" placeholder="e.g. Kyoto Cherry Blossom" required>
+                </div>
+                <div class="form-group">
+                    <label for="dest-country"><i class="fa-solid fa-globe"></i> Country</label>
+                    <input type="text" id="dest-country" placeholder="e.g. Japan" required>
+                </div>
+                <div class="form-group">
+                    <label for="dest-price"><i class="fa-solid fa-money-bill-wave"></i> Price (IDR)</label>
+                    <input type="number" id="dest-price" placeholder="e.g. 2500000" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="dest-image"><i class="fa-solid fa-image"></i> Image URL</label>
+                    <input type="url" id="dest-image" placeholder="https://images.unsplash.com/... (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="dest-rating"><i class="fa-solid fa-star"></i> Initial Rating (0-5)</label>
+                    <input type="number" id="dest-rating" placeholder="4.8" min="0" max="5" step="0.1" value="4.8">
+                </div>
+                <div class="form-group">
+                    <label for="dest-description"><i class="fa-solid fa-align-left"></i> Description</label>
+                    <textarea id="dest-description" rows="3" placeholder="Describe this beautiful destination..."></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-dest-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Destination</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Authentication Modal (Login / Sign Up) -->
+    <div class="modal-backdrop hidden" id="auth-modal">
+        <div class="modal auth-modal-container">
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" id="tab-login-btn">Sign In</button>
+                <button class="auth-tab-btn" id="tab-register-btn">Create Account</button>
+            </div>
+            
+            <!-- Traditional Sign In Form -->
+            <form id="login-form" class="modal-body auth-form">
+                <div class="form-group">
+                    <label for="login-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="login-email" placeholder="name@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full-width"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+                
+                <div class="divider"><span>or continue with</span></div>
+                
+                <button type="button" class="btn btn-google btn-full-width" id="btn-google-login">
+                    <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span>Sign in with Google</span>
+                </button>
+            </form>
+
+            <!-- Traditional Sign Up Form -->
+            <form id="register-form" class="modal-body auth-form hidden">
+                <div class="form-group">
+                    <label for="register-name"><i class="fa-solid fa-user"></i> Full Name</label>
+                    <input type="text" id="register-name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="register-email" placeholder="john@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password"><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="register-password" placeholder="Min. 6 characters" required minlength="6">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full-width"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+                
+                <div class="divider"><span>or continue with</span></div>
+                
+                <button type="button" class="btn btn-google btn-full-width" id="btn-google-register">
+                    <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span>Sign up with Google</span>
+                </button>
+            </form>
+            
+            <div class="auth-modal-footer">
+                <button class="btn-text" id="btn-close-auth">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom App Script -->
+    <script src="app.js"></script>
+</body>
+</html>
